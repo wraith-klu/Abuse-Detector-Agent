@@ -1,0 +1,24 @@
+import pandas as pd
+import plotly.express as px
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
+def plot_abusive_vs_nonabusive(abusive_tokens, all_words):
+    df_compare = pd.DataFrame({
+        "Type":["Abusive","Non-Abusive"],
+        "Count":[len(abusive_tokens), len(all_words)-len(abusive_tokens)]
+    })
+    fig = px.pie(df_compare, names='Type', values='Count',
+                 color='Type', color_discrete_map={'Abusive':'#e53935','Non-Abusive':'#43a047'},
+                 title="Abusive vs Non-Abusive Words")
+    fig.update_layout(plot_bgcolor='black', paper_bgcolor='black', font_color='white')
+    return fig
+
+def generate_wordcloud(words, title="Word Cloud"):
+    if words:
+        wc = WordCloud(width=800, height=400, background_color="black", colormap="cool").generate(" ".join(words))
+        fig, ax = plt.subplots()
+        ax.imshow(wc, interpolation='bilinear')
+        ax.axis("off")
+        return fig
+    return None
