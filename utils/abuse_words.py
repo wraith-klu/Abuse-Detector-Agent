@@ -2,12 +2,14 @@
 import re
 
 # Abusive words set
-abusive_words = { "idiot","stupid","dumb","hate","kill","loser","pathetic","ugly","shit",
+abusive_words = { "idiot","stupid","dumb","hate","kill","loser","pathetic","ugly","shit", "murder"
 "fool","trash","nonsense","moron","jerk","worthless","suck","sh*t","bastard","crap","damn","hell",
 "foolish","f**k","go to hell","bitch","asshole","a**hole","fuck","fucking","fucked","fucker","fucks",
 "fuk","fuking","fuked","fuker","motherf**ker","ass","piss","wtf","chodu","madarchod","randi","behenchod",
 "lund","gandu","bhosdike","bhadwe","sala","chutiya","pagal","bewakoof","harami","kaminey","kutte","lodu",
-"bullshit","bullsh*t","andhbhakt","tatti","bakwas","bkl","bc", "lawde" }
+"bullshit","bullsh*t","andhbhakt","tatti","bakwas","bkl","bc", "lawde", "frustrated", "frustrating", "irritating", 
+"annoying", "disrespectful", "rude", "mean", "cruel", "vile", "horrible", "terrible", "awful", "nasty",
+"disgusting", "pathetic", "sissy", "wimp", "loser", "geek", "nerd" }
 abusive_words = set(word.lower() for word in abusive_words)
 
 # Suggestions dictionary
