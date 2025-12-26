@@ -1,163 +1,252 @@
-# main.py
+# ============================
+# main.py — ToxiGuard AI (Premium UI)
+# ============================
+
 import streamlit as st
 import joblib
 import re
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 import plotly.express as px
-import plotly.graph_objects as go
 from textblob import TextBlob
 from nltk.corpus import stopwords
 import nltk
 from utils.abuse_words import abusive_words, suggestions, detect_abusive_tokens
 
-# ---------------- NLTK Stopwords ----------------
-nltk.download('stopwords')
-stop_words = set(stopwords.words('english'))
+# ---------------- Page Config ----------------
+st.set_page_config(
+    page_title="ToxiGuard AI",
+    page_icon="🛡️",
+    layout="wide"
+)
 
-# ---------------- Load Trained Model ----------------
-model_path = "abuse_model.joblib"
-try:
-    pipeline = joblib.load(model_path)
-except Exception as e:
-    st.error(f"Error loading model: {e}")
-    st.stop()
+# ---------------- PREMIUM GLOBAL CSS ----------------
+st.markdown("""
+<style>
 
-# ---------------- Text Preprocessing ----------------
+/* ===== Root Background ===== */
+.stApp {
+    background: linear-gradient(135deg, #0f172a 0%, #020617 60%, #020617 100%);
+    color: #e5e7eb;
+}
+
+/* ===== Remove White Header ===== */
+header[data-testid="stHeader"] {
+    background: linear-gradient(90deg, #020617, #0f172a);
+    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+}
+header[data-testid="stHeader"] * {
+    color: #e5e7eb !important;
+}
+
+/* ===== Remove White Decorations ===== */
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"],
+div[data-testid="stStatusWidget"] {
+    background: transparent !important;
+}
+
+/* ===== Sidebar ===== */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #020617, #0f172a);
+    border-right: 1px solid rgba(255,255,255,0.08);
+}
+section[data-testid="stSidebar"] * {
+    color: #e5e7eb !important;
+}
+
+/* ===== Glass Cards ===== */
+.glass {
+    background: rgba(255,255,255,0.10);
+    border-radius: 22px;
+    padding: 24px;
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 0 40px rgba(56,189,248,0.15);
+}
+
+/* ===== Text Area ===== */
+textarea {
+    background: rgba(2,6,23,0.9) !important;
+    color: #f9fafb !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* ===== Buttons ===== */
+.stButton>button {
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    color: #020617 !important;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.65em 2.6em;
+    border: none;
+    box-shadow: 0 0 25px rgba(56,189,248,0.5);
+    transition: all 0.25s ease;
+}
+.stButton>button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(99,102,241,0.8);
+}
+
+/* ===== KPI Cards ===== */
+.kpi-card {
+    background: linear-gradient(
+        160deg,
+        rgba(56,189,248,0.18),
+        rgba(99,102,241,0.18)
+    );
+    padding: 22px;
+    border-radius: 22px;
+    text-align: center;
+    color: #f9fafb !important;
+    box-shadow: 0 0 35px rgba(56,189,248,0.3);
+}
+.kpi-card h2 {
+    margin: 6px 0;
+    color: #ffffff !important;
+}
+
+/* ===== Expanders ===== */
+details, summary {
+    background: rgba(255,255,255,0.12) !important;
+    border-radius: 16px;
+    padding: 6px;
+}
+
+/* ===== Highlight Abusive Words ===== */
+.abusive-word {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- NLTK ----------------
+nltk.download("stopwords")
+stop_words = set(stopwords.words("english"))
+
+# ---------------- Load Model ----------------
+pipeline = joblib.load("abuse_model.joblib")
+
+# ---------------- Utils ----------------
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"http\S+|www\.\S+", " ", text)
-    text = re.sub(r"@\w+", " ", text)
-    text = re.sub(r"#\w+", " ", text)
+    text = re.sub(r"@\w+|#\w+", " ", text)
     text = re.sub(r"[^a-z0-9\s\*]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+    return re.sub(r"\s+", " ", text).strip()
 
 def normalize_censored(text):
-    replacements = {
-        r"f\*+k": "fuck",
-        r"a\*+hole": "asshole",
-        r"motherf\*+ker": "motherf**ker"
-    }
-    for pattern, replacement in replacements.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    text = re.sub(r"f\*+k", "fuck", text, flags=re.I)
+    text = re.sub(r"a\*+hole", "asshole", text, flags=re.I)
     return text
-
-def get_sentiment(text):
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    if polarity > 0.1:
-        sentiment = "Positive"
-    elif polarity < -0.1:
-        sentiment = "Negative"
-    else:
-        sentiment = "Neutral"
-    return sentiment, polarity
 
 def analyze_text(text):
     text = normalize_censored(text)
     cleaned = clean_text(text)
-    prediction = pipeline.predict([cleaned])[0]
+    pred = pipeline.predict([cleaned])[0]
     prob = pipeline.predict_proba([cleaned])[0][1]
     abusive_tokens = detect_abusive_tokens(text)
-    sentiment, polarity = get_sentiment(text)
-    return cleaned, prediction, prob, abusive_tokens, sentiment, polarity
+    polarity = TextBlob(text).sentiment.polarity
+    sentiment = "Positive" if polarity > 0.1 else "Negative" if polarity < -0.1 else "Neutral"
+    return cleaned, pred, prob, abusive_tokens, sentiment, polarity
 
-# ---------------- Streamlit Layout ----------------
-st.set_page_config(page_title="Abuse Detector", page_icon="😡", layout="wide")
-st.markdown("<h1 style='text-align:center; color:#00e5ff;'>🧠 Abuse Detector & Text Analysis</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#cfd8dc;'>Type your sentence and get abuse detection, sentiment & insights!</p>", unsafe_allow_html=True)
+# ---------------- Header ----------------
+st.markdown("""
+<h1 style="
+text-align:center;
+font-size:3rem;
+color:#38bdf8;
+text-shadow:0 0 20px rgba(56,189,248,0.7);
+">
+🛡️ ToxiGuard AI
+</h1>
+
+<p style="text-align:center;color:#e5e7eb;font-size:1.1rem;">
+Real-time Abuse Detection • Sentiment Analysis • NLP Insights
+</p>
+""", unsafe_allow_html=True)
 
 # ---------------- Sidebar ----------------
-st.sidebar.title("⚙️ Settings")
-real_time = st.sidebar.checkbox("Enable Real-Time Analysis", value=False)
+st.sidebar.markdown("<h2>⚙️ Control Panel</h2>", unsafe_allow_html=True)
+real_time = st.sidebar.toggle("⚡ Real-Time Analysis", value=False)
 
-# Search History
 if "history" not in st.session_state:
     st.session_state.history = []
 
 with st.sidebar.expander("📜 Search History", expanded=True):
-    for i, text in enumerate(reversed(st.session_state.history[-20:]), 1):
-        st.write(f"{i}. {text}")
+    for i, t in enumerate(reversed(st.session_state.history[-15:]), 1):
+        st.write(f"{i}. {t}")
 
-# User input
-user_input = st.text_area("Enter your text:", height=180, placeholder="Type your text here...")
+# ---------------- Input ----------------
+st.markdown("<div class='glass'>", unsafe_allow_html=True)
+st.markdown("<h4 style='color:#38bdf8;'>✍️ Enter text for analysis</h4>", unsafe_allow_html=True)
 
-# ---------------- Real-Time or Button Analysis ----------------
+user_input = st.text_area("", height=160, placeholder="Type or paste text here...")
+st.markdown("</div>", unsafe_allow_html=True)
+
+analyze_clicked = st.button("🔍 Analyze Sentence")
+
+# ---------------- Analysis ----------------
 def run_analysis(text):
-    cleaned, prediction, prob, abusive_tokens, sentiment, polarity = analyze_text(text)
-    total_words = len(cleaned.split())
-    abusive_count = len(abusive_tokens)
-    non_abusive_count = total_words - abusive_count
+    cleaned, pred, prob, abusive_tokens, sentiment, polarity = analyze_text(text)
 
-    # KPI cards
+    total = len(cleaned.split())
+    abusive = len(abusive_tokens)
+    clean = total - abusive
+
     st.markdown(f"""
-    <div style='display:flex; justify-content:space-around; margin-bottom:20px;'>
-        <div style='background:#00e5ff; padding:20px; border-radius:12px; text-align:center;'>Total Words<br>{total_words}</div>
-        <div style='background:#ff5252; padding:20px; border-radius:12px; text-align:center;'>Abusive Words<br>{abusive_count}</div>
-        <div style='background:#43a047; padding:20px; border-radius:12px; text-align:center;'>Non-Abusive Words<br>{non_abusive_count}</div>
+    <div style="display:flex;gap:20px;margin-top:20px;">
+        <div class="kpi-card">📄 Total Words<br><h2>{total}</h2></div>
+        <div class="kpi-card">⚠️ Abusive<br><h2>{abusive}</h2></div>
+        <div class="kpi-card">✅ Clean<br><h2>{clean}</h2></div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Highlight abusive words
-    highlighted_text = user_input
-    for word in abusive_tokens:
-        highlighted_text = re.sub(
-            f"(?i){re.escape(word)}",
-            f"<span style='color:#ff5252; font-weight:bold; background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:4px;'>{word}</span>",
-            highlighted_text
-        )
-    st.markdown(f"<div style='background: rgba(255,255,255,0.08); padding:15px; border-radius:12px; margin-top:10px;'><b>Sentence:</b><br>{highlighted_text}</div>", unsafe_allow_html=True)
-
-    # Sentiment
-    st.markdown(f"**Sentiment:** {sentiment} (Polarity: {polarity:.2f})")
-    st.markdown(f"**Prediction:** {'⚠️ Abusive' if prediction==1 else '✅ Clean'} (Probability: {prob:.2f})")
-
-    # Pie chart
-    df_compare = pd.DataFrame({"Type":["Abusive","Non-Abusive"],"Count":[abusive_count, non_abusive_count]})
-    fig_compare = px.pie(df_compare, names='Type', values='Count',
-                         color='Type', color_discrete_map={'Abusive':'#e53935','Non-Abusive':'#43a047'},
-                         title="Abusive vs Non-Abusive Words")
-    fig_compare.update_layout(plot_bgcolor='black', paper_bgcolor='black', font_color='white')
-    st.plotly_chart(fig_compare, use_container_width=True)
-
-    # Word Cloud
-    non_abusive_words = [w for w in re.findall(r'\b\w+\b', cleaned) if w not in stop_words and w not in abusive_words]
-    if non_abusive_words:
-        from wordcloud import WordCloud
-        import matplotlib.pyplot as plt
-        wc = WordCloud(width=800, height=400, background_color="black", colormap="cool").generate(" ".join(non_abusive_words))
-        st.markdown("<h4 style='color:#00e5ff;'>☁️ Word Cloud (Non-Abusive)</h4>", unsafe_allow_html=True)
-        fig_wc, ax = plt.subplots()
-        ax.imshow(wc, interpolation='bilinear')
-        ax.axis("off")
-        st.pyplot(fig_wc)
-
-    # Interactive Table
-    data = []
+    highlighted = text
     for w in abusive_tokens:
-        suggestion = suggestions.get(w, "Use polite language.")
-        severity = "High" if w in ['fuck','asshole','motherf**ker','gandu'] else "Moderate"
-        data.append({"Abusive Word": w, "Suggestion": suggestion, "Severity": severity})
-    if data:
-        df_table = pd.DataFrame(data)
-        gb = GridOptionsBuilder.from_dataframe(df_table)
-        gb.configure_default_column(editable=False, resizable=True, sortable=True, filter=True)
-        gb.configure_grid_options(domLayout='normal', rowHeight=35)
-        grid_options = gb.build()
-        AgGrid(df_table, gridOptions=grid_options, height=200, theme='streamlit', allow_unsafe_jscode=True)
+        highlighted = re.sub(
+            f"(?i){re.escape(w)}",
+            f"<span class='abusive-word'>{w}</span>",
+            highlighted
+        )
 
-        # Download CSV
-        csv = df_table.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Report CSV", data=csv, file_name='abuse_report.csv', mime='text/csv')
+    st.markdown(f"<div class='glass'><b>Sentence:</b><br>{highlighted}</div>", unsafe_allow_html=True)
 
-# ---------------- Run Analysis ----------------
+    st.markdown(f"""
+    <div class="glass" style="margin-top:15px;">
+    <b>Prediction:</b> {'⚠️ ABUSIVE' if pred else '✅ CLEAN'}<br>
+    Sentiment: <b>{sentiment}</b> (Polarity {polarity:.2f})<br>
+    Confidence: <b>{prob:.2f}</b>
+    </div>
+    """, unsafe_allow_html=True)
+
+    df = pd.DataFrame({"Type": ["Abusive", "Clean"], "Count": [abusive, clean]})
+    fig = px.pie(df, names="Type", values="Count",
+                 color="Type",
+                 color_discrete_map={"Abusive": "#ef4444", "Clean": "#22c55e"})
+    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
+    st.plotly_chart(fig, use_container_width=True)
+
+# ---------------- Trigger ----------------
 if user_input.strip():
-    # Add to history
     if user_input not in st.session_state.history:
         st.session_state.history.append(user_input)
+    if analyze_clicked or real_time:
+        run_analysis(user_input)
 
-    if real_time:
-        run_analysis(user_input)
-    elif st.button("Analyze Sentence"):
-        run_analysis(user_input)
+# ---------------- Footer ----------------
+st.markdown("""
+<hr>
+<p style="text-align:center;color:#94a3b8;">
+Powered by <b>ToxiGuard AI</b> • GenAI • NLP • Streamlit
+</p>
+""", unsafe_allow_html=True)

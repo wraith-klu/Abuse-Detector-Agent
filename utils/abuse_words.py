@@ -7,7 +7,7 @@ abusive_words = { "idiot","stupid","dumb","hate","kill","loser","pathetic","ugly
 "foolish","f**k","go to hell","bitch","asshole","a**hole","fuck","fucking","fucked","fucker","fucks",
 "fuk","fuking","fuked","fuker","motherf**ker","ass","piss","wtf","chodu","madarchod","randi","behenchod",
 "lund","gandu","bhosdike","bhadwe","sala","chutiya","pagal","bewakoof","harami","kaminey","kutte","lodu",
-"bullshit","bullsh*t","andhbhakt","tatti","bakwas","bkl","bc" }
+"bullshit","bullsh*t","andhbhakt","tatti","bakwas","bkl","bc", "lawde" }
 abusive_words = set(word.lower() for word in abusive_words)
 
 # Suggestions dictionary
