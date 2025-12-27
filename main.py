@@ -1,4 +1,3 @@
-# ============================
 # main.py — ToxiGuard AI (Premium UI)
 # ============================
 
@@ -28,10 +27,6 @@ st.set_page_config(
 # ---------------- PREMIUM GLOBAL CSS ----------------
 st.markdown("""
 <style>
-            
- /* ============================
-   TOXIGUARD AI — PREMIUM GLOBAL CSS
-   ============================ */
 
 /* ===== Root Background ===== */
 .stApp {
