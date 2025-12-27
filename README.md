@@ -4,7 +4,16 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.25-orange?logo=streamlit&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**Real-time AI-based abuse detector and text analysis tool** with sentiment insights, toxicity reporting, and word-level suggestions.
+-> **🛡️ ToxiGuard AI – Abuse Detection System (AI Project)**
+- *🧠 Tech Stack: Python | Streamlit | NLP | Machine Learning | Plotly*
+
+- ⚡ Real-time detection of abusive/toxic language with sentiment classification
+- 🎯 Confidence scoring with abusive keyword highlighting & severity analysis
+- 📊 Interactive analytics dashboard for NLP insights
+- 🎨 Clean, scalable UI with custom CSS (production-ready)
+- **🔗 Repo:** [GitHub](https://github.com/wraith-klu/Abuse-Detector-Agent.git) | **🌐 Live:** [Link](https://toxiguardagent.streamlit.app/)
+
+- **Real-time AI-based abuse detector and text analysis tool** with sentiment insights, toxicity reporting, and word-level suggestions.
 
 ---
 
