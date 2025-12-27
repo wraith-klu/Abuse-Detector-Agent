@@ -27,7 +27,11 @@ st.set_page_config(
 # ---------------- PREMIUM GLOBAL CSS ----------------
 st.markdown("""
 <style>
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> c9b53ea (Updated code)
 /* ===== Root Background ===== */
 .stApp {
     background: radial-gradient(
@@ -277,10 +281,12 @@ def normalize_censored(text):
     text = re.sub(r"a\*+hole", "asshole", text, flags=re.I)
     return text
 
-def toxicity_level(prob):
-    if prob < 0.3:
+def toxicity_level(prob, abusive_count):
+    if abusive_count == 0:
         return "Low"
-    elif prob < 0.6:
+    if prob < 0.2:
+        return "Low"
+    elif prob < 0.5:
         return "Medium"
     else:
         return "High"
@@ -360,11 +366,17 @@ analyze_clicked = st.button("🔍 Analyze")
 # ---------------- Analysis ----------------
 def run_analysis(text):
     cleaned, pred, prob, abusive_tokens, sentiment, polarity = analyze_text(text)
-    severity = toxicity_level(prob)
+    severity = toxicity_level(prob, len(abusive_tokens))
 
     total = len(cleaned.split())
     abusive = len(abusive_tokens)
     clean = total - abusive
+
+    st.session_state.history.append({
+        "text": text,
+        "toxicity": prob,
+        "severity": severity
+    })
 
     # KPIs
     st.markdown(f"""
@@ -375,6 +387,7 @@ def run_analysis(text):
     </div>
     """, unsafe_allow_html=True)
 
+    
     # Highlighted Text
     highlighted = text
     for w in abusive_tokens:
@@ -394,6 +407,20 @@ def run_analysis(text):
     Confidence: <b>{prob:.2f}</b>
     </div>
     """, unsafe_allow_html=True)
+    st.markdown("### 🧠 Why this result?")
+    reasons = []
+
+    if abusive_tokens:
+        reasons.append("Detected abusive vocabulary")
+    if prob > 0.4:
+        reasons.append("Semantic toxicity detected by ML model")
+    if polarity < -0.3:
+        reasons.append("Strong negative sentiment")
+    if not reasons:
+        reasons.append("No toxic indicators found")
+
+    for r in reasons:
+        st.markdown(f"- {r}")
 
     # Toxicity Gauge
     gauge = px.bar(
