@@ -1,3 +1,4 @@
+# ============================
 # main.py — ToxiGuard AI (Premium UI)
 # ============================
 
@@ -27,11 +28,7 @@ st.set_page_config(
 # ---------------- PREMIUM GLOBAL CSS ----------------
 st.markdown("""
 <style>
-<<<<<<< HEAD
-
-=======
             
->>>>>>> c9b53ea (Updated code)
 /* ===== Root Background ===== */
 .stApp {
     background: radial-gradient(
