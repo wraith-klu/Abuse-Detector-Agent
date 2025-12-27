@@ -11,7 +11,7 @@
 - 🎯 Confidence scoring with abusive keyword highlighting & severity analysis
 - 📊 Interactive analytics dashboard for NLP insights
 - 🎨 Clean, scalable UI with custom CSS (production-ready)
-- **🔗 Repo:** [GitHub](https://github.com/wraith-klu/Abuse-Detector-Agent.git) | **🌐 Live:** [Link](https://toxiguardagent.streamlit.app/)
+- **🔗 Repo:** [GitHub](https://github.com/wraith-klu/Abuse-Detector-Agent.git) | **🌐 Live:** [Deployment Link](https://toxiguardagent.streamlit.app/)
 
 - **Real-time AI-based abuse detector and text analysis tool** with sentiment insights, toxicity reporting, and word-level suggestions.
 
