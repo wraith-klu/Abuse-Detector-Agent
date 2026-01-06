@@ -7,7 +7,7 @@ abusive_words = {
     "fuck","fucking","fucked","fucker","motherfucker","mf",
     "shit","bullshit","crap","asshole","ass","bitch",
     "bastard","cunt","slut","whore","dick","dickhead",
-    "prick","pussy","scumbag",
+    "prick","pussy","scumbag", "toxic",
 
     # ---------- ENGLISH: OBFUSCATED ----------
     "f*ck","f**k","fuk","fuking","fuked","fuker",
@@ -17,7 +17,7 @@ abusive_words = {
     "idiot","stupid","dumb","moron","fool","foolish",
     "loser","worthless","pathetic","ugly","jerk","trash",
     "garbage","nonsense","cringe","lame","weirdo","creep",
-    "psycho","maniac","nutcase","degenerate",
+    "psycho","maniac","nutcase","degenerate", "bully", 
 
     # ---------- ENGLISH: TOXIC / THREATS ----------
     "hate","kill","murder","die","go die","drop dead",
